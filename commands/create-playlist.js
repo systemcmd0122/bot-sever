@@ -12,12 +12,14 @@ module.exports = {
                 .setRequired(true)),
     async execute(interaction) {
         const name = interaction.options.getString('name');
+        const guildId = interaction.guild.id; // サーバーのIDを取得
 
         // Supabaseからプレイリストが既に存在するかを確認する
         const { data: existingPlaylist, error: fetchError } = await supabase
             .from('playlists')
             .select('name')
             .eq('name', name)
+            .eq('guild_id', guildId)
             .single();
 
         if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116: 行が見つからない
@@ -40,7 +42,7 @@ module.exports = {
         // プレイリストが存在しない場合、新しいプレイリストを作成する
         const { error: insertError } = await supabase
             .from('playlists')
-            .insert([{ name, songs: [] }]);
+            .insert([{ name, guild_id: guildId, songs: [] }]);
 
         if (insertError) {
             console.error('プレイリストの作成中にエラーが発生しました:', insertError);

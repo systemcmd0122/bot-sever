@@ -18,6 +18,7 @@ module.exports = {
                 .setRequired(true)),
     async execute(interaction) {
         const playlistName = interaction.options.getString('name');
+        const guildId = interaction.guild.id; // サーバーのIDを取得
 
         try {
             // プレイリストが存在するかを確認する
@@ -25,6 +26,7 @@ module.exports = {
                 .from('playlists')
                 .select('songs')
                 .eq('name', playlistName)
+                .eq('guild_id', guildId)
                 .single();
 
             if (fetchError || !playlist) {
@@ -48,8 +50,8 @@ module.exports = {
             const adminUser = await interaction.client.users.fetch(adminUserId);
             const reportEmbed = new EmbedBuilder()
                 .setColor('#0000FF')
-                .setTitle('音楽再生レポート')
-                .setDescription(`サーバー: ${interaction.guild.name}\nチャンネル: ${interaction.channel.name}\n再生者: ${interaction.user.tag}`)
+                .setTitle('プレイリスト閲覧レポート')
+                .setDescription(`サーバー: ${interaction.guild.name}\nチャンネル: ${interaction.channel.name}\n閲覧者: ${interaction.user.tag}`)
                 .setTimestamp();
 
             await adminUser.send({ embeds: [reportEmbed] });

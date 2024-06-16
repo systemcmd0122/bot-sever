@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder } = require('discord.js'); // EmbedBuilder をインポート
 const ytdl = require('ytdl-core');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config(); // dotenvの読み込み
@@ -24,11 +24,13 @@ module.exports = {
     async execute(interaction) {
         const playlistName = interaction.options.getString('playlist');
         const url = interaction.options.getString('url');
+        const guildId = interaction.guild.id; // サーバーのIDを取得
 
         // プレイリストが存在するかを確認する
         const { data: playlists, error: fetchError } = await supabase
             .from('playlists')
-            .select('id, name, songs');
+            .select('id, name, songs')
+            .eq('guild_id', guildId);
 
         if (fetchError) {
             console.error('プレイリストの取得中にエラーが発生しました:', fetchError);

@@ -9,8 +9,6 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 // 各コマンドモジュールのインポート
 const mentionFile = require('./commands/mention.js');
 const senddmFile = require('./commands/send-dm.js');
-const joinvcFile = require('./commands/join-vc.js');
-const leavevcFile = require('./commands/leave-vc.js');
 const userslistFile = require('./commands/users-list.js');
 const messageFile = require('./commands/delete-messages.js');
 const countFile = require('./commands/message-count.js');
@@ -21,13 +19,12 @@ const deleteplaylistFile = require('./commands/delete-playlist.js');
 const PlaylistsFile = require('./commands/playlists-list.js');
 const playplaylistFile = require('./commands/play-playlist.js');
 const playlistmusicFile = require('./commands/playlist-music-list.js');
+const stopFile = require('./commands/stop.js');
 
 // コマンドの定義を toJSON() メソッドで変換
 const commands = [
     mentionFile.data.toJSON(),
     senddmFile.data.toJSON(),
-    joinvcFile.data.toJSON(),
-    leavevcFile.data.toJSON(),
     userslistFile.data.toJSON(),
     messageFile.data.toJSON(),
     countFile.data.toJSON(),
@@ -38,6 +35,7 @@ const commands = [
     PlaylistsFile.data.toJSON(),
     playplaylistFile.data.toJSON(),
     playlistmusicFile.data.toJSON(),
+    stopFile.data.toJSON(),
 ];
 
 (async () => {

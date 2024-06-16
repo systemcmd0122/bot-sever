@@ -13,11 +13,14 @@ module.exports = {
         .setName('playlists-list')
         .setDescription('利用可能なプレイリストの一覧を表示します。'),
     async execute(interaction) {
+        const guildId = interaction.guild.id; // サーバーのIDを取得
+
         try {
             // Supabaseからプレイリスト情報を取得する
             const { data: playlists, error } = await supabase
                 .from('playlists')
-                .select('name');
+                .select('name')
+                .eq('guild_id', guildId);
 
             if (error) {
                 throw error;

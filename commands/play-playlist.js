@@ -20,6 +20,7 @@ module.exports = {
                 .setRequired(true)),
     async execute(interaction) {
         const playlistName = interaction.options.getString('name');
+        const guildId = interaction.guild.id; // サーバーのIDを取得
         const voiceChannel = interaction.member.voice.channel;
 
         if (!voiceChannel) {
@@ -37,13 +38,10 @@ module.exports = {
                 .from('playlists')
                 .select('songs')
                 .eq('name', playlistName)
+                .eq('guild_id', guildId)
                 .single();
 
-            if (error) {
-                throw error;
-            }
-
-            if (!playlistData) {
+            if (error || !playlistData) {
                 const noPlaylistEmbed = new EmbedBuilder()
                     .setColor('#FF0000')
                     .setTitle('エラー')

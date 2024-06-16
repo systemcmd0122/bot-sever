@@ -10,8 +10,6 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // コマンドモジュールのインポート
 const mentionFile = require('./commands/mention.js');
 const senddmFile = require('./commands/send-dm.js');
-const joinvcFile = require('./commands/join-vc.js');
-const leavevcFile = require('./commands/leave-vc.js');
 const userslistFile = require('./commands/users-list.js');
 const messageFile = require('./commands/delete-messages.js');
 const countFile = require('./commands/message-count.js');
@@ -22,9 +20,10 @@ const deleteplaylistFile = require('./commands/delete-playlist.js');
 const PlaylistsFile = require('./commands/playlists-list.js');
 const playplaylistFile = require('./commands/play-playlist.js');
 const playlistmusicFile = require('./commands/playlist-music-list.js');
+const stopFile = require('./commands/stop.js');
 
 // クライアントの作成と必要なインテントの設定
-const client = new Client({
+const client = ( global.client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildVoiceStates,
@@ -32,19 +31,30 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
     ]
-});
+}));
 
 client.commands = new Map(); // コマンドを格納するマップ
+client.functions = new Map(); // 関数を格納するマップ
 
 // 各コマンドモジュールをコマンド名でマッピング
 const commands = [
-    mentionFile, senddmFile, joinvcFile, leavevcFile, userslistFile, messageFile,
+    mentionFile, senddmFile , userslistFile, messageFile,
     countFile, createPlaylistFile, addToPlaylistFile, removefromplaylistFile,
     deleteplaylistFile, PlaylistsFile, playplaylistFile, playlistmusicFile,
+    stopFile, 
+];
+// 各関数モジュールをコマンド名でマッピング
+const Playlist = require('./masaabu-create/functions/playlist.js')
+const functions = [
+    Playlist
 ];
 
 for (const command of commands) {
     client.commands.set(command.data.name, command);
+}
+
+for (const file of functions) {
+    client.functions.set(file.name, file);
 }
 
 // クライアントが準備できたときのイベントリスナー

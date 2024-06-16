@@ -1,6 +1,5 @@
 require('dotenv').config(); // dotenvを使用して.envファイルを読み込む
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const fs = require('fs');
 const { MessageEmbed } = require('discord.js');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -26,6 +25,7 @@ module.exports = {
     async execute(interaction) {
         const playlistName = interaction.options.getString('playlist');
         const index = interaction.options.getInteger('index');
+        const guildId = interaction.guild.id; // サーバーのIDを取得
 
         try {
             // Supabaseからプレイリストを取得
@@ -33,6 +33,7 @@ module.exports = {
                 .from('playlists')
                 .select('*')
                 .eq('name', playlistName)
+                .eq('guild_id', guildId)
                 .single();
 
             if (error || !playlists) {
@@ -47,10 +48,11 @@ module.exports = {
             const removedSong = playlist.splice(index - 1, 1);
 
             // Supabaseにプレイリストを更新
-            const { updateError } = await supabase
+            const { error: updateError } = await supabase
                 .from('playlists')
                 .update({ songs: playlist })
-                .eq('name', playlistName);
+                .eq('name', playlistName)
+                .eq('guild_id', guildId);
 
             if (updateError) {
                 console.error('Supabaseでの更新中にエラーが発生しました:', updateError.message);
@@ -62,8 +64,8 @@ module.exports = {
             const adminUser = await interaction.client.users.fetch(adminUserId);
             const reportEmbed = new MessageEmbed()
                 .setColor('#0000FF')
-                .setTitle('音楽再生レポート')
-                .setDescription(`サーバー: ${interaction.guild.name}\nチャンネル: ${interaction.channel.name}\n再生者: ${interaction.user.tag}`)
+                .setTitle('音楽削除レポート')
+                .setDescription(`サーバー: ${interaction.guild.name}\nチャンネル: ${interaction.channel.name}\n削除者: ${interaction.user.tag}\nプレイリスト: ${playlistName}\n削除された曲: ${removedSong[0].title}`)
                 .setTimestamp();
 
             await adminUser.send({ embeds: [reportEmbed] });

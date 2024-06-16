@@ -18,6 +18,7 @@ module.exports = {
                 .setRequired(true)),
     async execute(interaction) {
         const playlistName = interaction.options.getString('name');
+        const guildId = interaction.guild.id; // サーバーのIDを取得
 
         try {
             // プレイリストが存在するかを確認する
@@ -25,6 +26,7 @@ module.exports = {
                 .from('playlists')
                 .select('id')
                 .eq('name', playlistName)
+                .eq('guild_id', guildId)
                 .single();
 
             if (fetchError || !playlist) {
