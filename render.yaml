@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: bot-sever
+    env: node
+    rootDir: index.js
+    buildCommand: npm install
+    startCommand: node index.js
