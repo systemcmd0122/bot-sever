@@ -8,7 +8,7 @@ const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // コマンドモジュールのインポート
-//音楽関係のコマンド
+// 音楽関係のコマンド
 const createPlaylistFile = require('./commands/create-playlist.js');
 const addToPlaylistFile = require('./commands/add-to-playlist.js');
 const removefromplaylistFile = require('./commands/removemusic-from-playlist.js');
@@ -18,7 +18,7 @@ const playplaylistFile = require('./commands/play-playlist.js');
 const stopFile = require('./commands/stop.js');
 const shareplaylistFile = require('./commands/share-playlist.js');
 
-//その他のコマンド
+// その他のコマンド
 const mentionFile = require('./commands/mention.js');
 const messagecountFile = require('./commands/message-count.js');
 const deletemessageFile = require('./commands/delete-messages.js');
@@ -40,7 +40,7 @@ client.commands = new Map();
 
 // 各コマンドモジュールをコマンド名でマッピング
 const commands = [
-    //音楽関係のコマンド
+    // 音楽関係のコマンド
     createPlaylistFile,
     addToPlaylistFile,
     removefromplaylistFile,
@@ -50,7 +50,7 @@ const commands = [
     stopFile,
     shareplaylistFile,
 
-    //その他のコマンド
+    // その他のコマンド
     mentionFile,
     messagecountFile,
     deletemessageFile,
@@ -108,4 +108,17 @@ client.on('error', async (error) => {
     } catch (loginError) {
         console.error('再接続に失敗しました。', loginError);
     }
+});
+
+// Expressサーバーの追加
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.send('Discord bot is running!');
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
