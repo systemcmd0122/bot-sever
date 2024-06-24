@@ -12,12 +12,14 @@ module.exports = {
         }
 
         try {
+            await interaction.reply('サーバーのユーザー一覧を取得しています...');
+
             // ギルドの全メンバーを取得
             const members = await guild.members.fetch();
             
             // メンバーがいない場合
             if (members.size === 0) {
-                return interaction.reply('サーバーにユーザーがいません。');
+                return interaction.editReply('サーバーにユーザーがいません。');
             }
 
             // メンバーリストを作成
@@ -30,13 +32,13 @@ module.exports = {
             const embed = new EmbedBuilder()
                 .setTitle('サーバーにいるユーザーの一覧')
                 .setDescription(memberList)
-                .setColor(0x00AE86); // 埋め込みメッセージの色を設定
+                .setColor('#00AE86'); // 埋め込みメッセージの色を設定
             
             // メッセージを送信
-            await interaction.reply({ embeds: [embed] });
+            await interaction.editReply({ embeds: [embed] });
         } catch (error) {
             console.error('ユーザー一覧の取得中にエラーが発生しました:', error);
-            await interaction.reply('ユーザー一覧の取得中にエラーが発生しました。');
+            await interaction.editReply('ユーザー一覧の取得中にエラーが発生しました。');
         }
     },
 };

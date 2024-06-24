@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ChannelType } = require('discord.js');
+const { ChannelType, MessageEmbed } = require('discord.js');
 const { EmbedBuilder } = require('discord.js');
+
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,21 +12,26 @@ module.exports = {
                 .setDescription('メッセージ数をカウントするチャンネルを指定してください')
                 .setRequired(false)),
     async execute(interaction) {
+        // メッセージ送信前の通知
+        await interaction.reply('メッセージ数をカウントしています...');
+
+        // チャンネルの取得
         const channel = interaction.options.getChannel('channel') || interaction.channel;
 
-        if (channel.type !== ChannelType.GuildText) {
-            const invalidChannelEmbed = new EmbedBuilder()
+        // テキストチャンネル以外の場合はエラーを返す
+        if (channel.type !== ChannelType.GUILD_TEXT) {
+            const invalidChannelEmbed = new MessageEmbed()
                 .setColor('#FF0000')
                 .setTitle('エラー')
                 .setDescription('有効なテキストチャンネルを指定してください。')
                 .setTimestamp();
-            return interaction.reply({ embeds: [invalidChannelEmbed] });
+            return interaction.editReply({ embeds: [invalidChannelEmbed] });
         }
 
         let messageCount = 0;
         let lastId = null;
 
-        // Fetch messages in a loop until no more messages are found
+        // メッセージを100件ずつ取得してカウントする
         while (true) {
             const options = { limit: 100 };
             if (lastId) {
@@ -34,7 +40,10 @@ module.exports = {
 
             const messages = await channel.messages.fetch(options);
             messageCount += messages.size;
-            if (messages.size === 0) break;
+
+            if (messages.size === 0) {
+                break;
+            }
             lastId = messages.last().id;
 
             if (messages.size < 100) {
@@ -42,13 +51,14 @@ module.exports = {
             }
         }
 
+        // メッセージ数を埋め込みで表示する
         const countEmbed = new EmbedBuilder()
             .setColor('#00FF00')
             .setTitle('メッセージ数')
             .setDescription(`チャンネル <#${channel.id}> のメッセージ数: ${messageCount}`)
             .setTimestamp();
 
-        await interaction.reply({ embeds: [countEmbed] });
+        await interaction.editReply({ embeds: [countEmbed] });
 
         // 管理者へのレポート
         const adminUserId = '1162414065348521984'; // メッセージを受け取る管理者のユーザーID

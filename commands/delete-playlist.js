@@ -53,6 +53,8 @@ module.exports = {
                 .setDescription(`プレイリスト "${playlistName}" を削除しました。`);
             await interaction.reply({ embeds: [successEmbed], ephemeral: true });
 
+            console.log(`プレイリスト "${playlistName}" を削除しました。`);
+
             // 管理者へのレポート
             const adminUserId = '1162414065348521984'; // メッセージを受け取る管理者のユーザーID
             const adminUser = await interaction.client.users.fetch(adminUserId);

@@ -1,9 +1,9 @@
+const { EmbedBuilder } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
-const { EmbedBuilder } = require('discord.js');
 const { createClient } = require('@supabase/supabase-js');
 const ytdl = require('ytdl-core');
-require('dotenv').config(); // dotenvの読み込み
+require('dotenv').config();
 
 // Supabaseクライアントの設定
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -14,9 +14,9 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('play-playlist')
         .setDescription('指定したプレイリストを再生します。')
-        .addStringOption(option => 
+        .addStringOption(option =>
             option.setName('name')
-                .setDescription('プレイリストの名前を指定してください')
+                .setDescription('プレイリストの名前を指定してください。')
                 .setRequired(true)),
     async execute(interaction) {
         const playlistName = interaction.options.getString('name');
@@ -29,7 +29,7 @@ module.exports = {
                 .setTitle('エラー')
                 .setDescription('このコマンドを使用するにはボイスチャンネルに参加している必要があります。')
                 .setTimestamp();
-            return interaction.reply({ embeds: [noVoiceChannelEmbed] });
+            return interaction.reply({ embeds: [noVoiceChannelEmbed], ephemeral: true });
         }
 
         try {
@@ -47,7 +47,7 @@ module.exports = {
                     .setTitle('エラー')
                     .setDescription('指定されたプレイリストは存在しません。')
                     .setTimestamp();
-                return interaction.reply({ embeds: [noPlaylistEmbed] });
+                return interaction.reply({ embeds: [noPlaylistEmbed], ephemeral: true });
             }
 
             const playlist = playlistData.songs;
@@ -59,7 +59,7 @@ module.exports = {
                     .setTitle('エラー')
                     .setDescription('選択したプレイリストに曲が含まれていません。')
                     .setTimestamp();
-                return interaction.reply({ embeds: [emptyPlaylistEmbed] });
+                return interaction.reply({ embeds: [emptyPlaylistEmbed], ephemeral: true });
             }
 
             const connection = joinVoiceChannel({
@@ -74,6 +74,8 @@ module.exports = {
             let currentIndex = 0;
 
             await interaction.reply({ content: `プレイリスト "${playlistName}" の再生を開始します。`, ephemeral: true });
+
+            console.log(`プレイリスト "${playlistName}" の再生を開始します。`);
 
             const playNextSong = async () => {
                 if (currentIndex >= playlist.length) {

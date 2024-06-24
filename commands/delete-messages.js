@@ -50,6 +50,8 @@ module.exports = {
 
     await interaction.reply({ embeds: [embed], ephemeral: true });
 
+    console.log(`${deleteCount}件のメッセージを削除しました。`);
+
     // Send a report to the specific user
     const user = await interaction.client.users.fetch(useId);
     const reportEmbed = new EmbedBuilder()

@@ -7,35 +7,41 @@ const fs = require('fs');
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
 // 各コマンドモジュールのインポート
-const mentionFile = require('./commands/mention.js');
-const senddmFile = require('./commands/send-dm.js');
-const userslistFile = require('./commands/users-list.js');
-const messageFile = require('./commands/delete-messages.js');
-const countFile = require('./commands/message-count.js');
+//音楽関係のコマンド
 const createPlaylistFile = require('./commands/create-playlist.js');
 const addToPlaylistFile = require('./commands/add-to-playlist.js');
 const removefromplaylistFile = require('./commands/removemusic-from-playlist.js');
 const deleteplaylistFile = require('./commands/delete-playlist.js');
 const PlaylistsFile = require('./commands/playlists-list.js');
 const playplaylistFile = require('./commands/play-playlist.js');
-const playlistmusicFile = require('./commands/playlist-music-list.js');
 const stopFile = require('./commands/stop.js');
+const shareplaylistFile = require('./commands/share-playlist.js');
+
+//その他のコマンド
+const mentionFile = require('./commands/mention.js');
+const messagecountFile = require('./commands/message-count.js');
+const deletemessageFile = require('./commands/delete-messages.js');
+const senddmFile = require('./commands/send-dm.js');
+const userlistFile =require('./commands/users-list.js');
 
 // コマンドの定義を toJSON() メソッドで変換
 const commands = [
-    mentionFile.data.toJSON(),
-    senddmFile.data.toJSON(),
-    userslistFile.data.toJSON(),
-    messageFile.data.toJSON(),
-    countFile.data.toJSON(),
+    //音楽関係のコマンド
     createPlaylistFile.data.toJSON(),
     addToPlaylistFile.data.toJSON(),
     removefromplaylistFile.data.toJSON(),
     deleteplaylistFile.data.toJSON(),
     PlaylistsFile.data.toJSON(),
     playplaylistFile.data.toJSON(),
-    playlistmusicFile.data.toJSON(),
     stopFile.data.toJSON(),
+    shareplaylistFile.data.toJSON(),
+
+    //その他のコマンド
+    mentionFile.data.toJSON(),
+    messagecountFile.data.toJSON(),
+    deletemessageFile.data.toJSON(),
+    senddmFile.data.toJSON(),
+    userlistFile.data.toJSON(),
 ];
 
 (async () => {

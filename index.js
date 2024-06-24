@@ -1,5 +1,5 @@
 const { Client, Events, GatewayIntentBits } = require('discord.js');
-require('dotenv').config(); // dotenvの読み込み
+require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 
 // Supabaseクライアントの設定
@@ -8,22 +8,25 @@ const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // コマンドモジュールのインポート
-const mentionFile = require('./commands/mention.js');
-const senddmFile = require('./commands/send-dm.js');
-const userslistFile = require('./commands/users-list.js');
-const messageFile = require('./commands/delete-messages.js');
-const countFile = require('./commands/message-count.js');
+//音楽関係のコマンド
 const createPlaylistFile = require('./commands/create-playlist.js');
 const addToPlaylistFile = require('./commands/add-to-playlist.js');
 const removefromplaylistFile = require('./commands/removemusic-from-playlist.js');
 const deleteplaylistFile = require('./commands/delete-playlist.js');
 const PlaylistsFile = require('./commands/playlists-list.js');
 const playplaylistFile = require('./commands/play-playlist.js');
-const playlistmusicFile = require('./commands/playlist-music-list.js');
 const stopFile = require('./commands/stop.js');
+const shareplaylistFile = require('./commands/share-playlist.js');
+
+//その他のコマンド
+const mentionFile = require('./commands/mention.js');
+const messagecountFile = require('./commands/message-count.js');
+const deletemessageFile = require('./commands/delete-messages.js');
+const senddmFile = require('./commands/send-dm.js');
+const userlistFile = require('./commands/users-list.js');
 
 // クライアントの作成と必要なインテントの設定
-const client = ( global.client = new Client({
+const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildVoiceStates,
@@ -31,30 +34,32 @@ const client = ( global.client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
     ]
-}));
+});
 
-client.commands = new Map(); // コマンドを格納するマップ
-client.functions = new Map(); // 関数を格納するマップ
+client.commands = new Map();
 
 // 各コマンドモジュールをコマンド名でマッピング
 const commands = [
-    mentionFile, senddmFile , userslistFile, messageFile,
-    countFile, createPlaylistFile, addToPlaylistFile, removefromplaylistFile,
-    deleteplaylistFile, PlaylistsFile, playplaylistFile, playlistmusicFile,
-    stopFile, 
-];
-// 各関数モジュールをコマンド名でマッピング
-const Playlist = require('./masaabu-create/functions/playlist.js')
-const functions = [
-    Playlist
+    //音楽関係のコマンド
+    createPlaylistFile,
+    addToPlaylistFile,
+    removefromplaylistFile,
+    deleteplaylistFile,
+    PlaylistsFile,
+    playplaylistFile,
+    stopFile,
+    shareplaylistFile,
+
+    //その他のコマンド
+    mentionFile,
+    messagecountFile,
+    deletemessageFile,
+    senddmFile,
+    userlistFile,
 ];
 
 for (const command of commands) {
     client.commands.set(command.data.name, command);
-}
-
-for (const file of functions) {
-    client.functions.set(file.name, file);
 }
 
 // クライアントが準備できたときのイベントリスナー
@@ -78,9 +83,9 @@ client.on(Events.InteractionCreate, async interaction => {
 
     // コマンドの実行とエラーハンドリング
     try {
-        await command.execute(interaction);
+        await command.execute(interaction, supabase); // supabaseクライアントを渡す
     } catch (error) {
-        console.error(error); // エラーの詳細をログに出力
+        console.error(error);
         const replyOptions = { content: 'コマンド実行時にエラーになりました。', ephemeral: true };
         if (interaction.replied || interaction.deferred) {
             await interaction.followUp(replyOptions);

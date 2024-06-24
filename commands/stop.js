@@ -24,6 +24,7 @@ module.exports = {
                 .setColor('#00FF00')
                 .setTitle('ボット退出')
                 .setDescription('ボイスチャンネルから退出しました。');
+                console.log('ボイスチャンネルから退出しました。');
             await interaction.reply({ embeds: [successEmbed], ephemeral: true });
 
             // 管理者へのレポート

@@ -1,19 +1,10 @@
-require('dotenv').config(); // dotenvを使用して.envファイルを読み込む
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
-const { createClient } = require('@supabase/supabase-js');
-
-// .envファイルからSupabaseのURLとキーを取得する
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-
-// Supabaseクライアントの初期化
-const supabase = createClient(supabaseUrl, supabaseKey);
+const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('removemusic-from-playlist')
-        .setDescription('指定したプレイリストから曲を削除します。')
+        .setDescription('指定したプレイリストから曲を削除します')
         .addStringOption(option =>
             option.setName('playlist')
                 .setDescription('曲を削除するプレイリストの名前')
@@ -22,58 +13,60 @@ module.exports = {
             option.setName('index')
                 .setDescription('削除する曲のインデックス')
                 .setRequired(true)),
-    async execute(interaction) {
+    async execute(interaction, supabase) {
         const playlistName = interaction.options.getString('playlist');
         const index = interaction.options.getInteger('index');
         const guildId = interaction.guild.id; // サーバーのIDを取得
 
-        try {
-            // Supabaseからプレイリストを取得
-            const { data: playlists, error } = await supabase
-                .from('playlists')
-                .select('*')
-                .eq('name', playlistName)
-                .eq('guild_id', guildId)
-                .single();
+        // プレイリストを取得
+        const { data: playlist, error } = await supabase
+            .from('playlists')
+            .select('songs')
+            .eq('name', playlistName)
+            .eq('guild_id', guildId)
+            .single();
 
-            if (error || !playlists) {
-                return interaction.reply({ content: '指定されたプレイリストは存在しません。', ephemeral: true });
-            }
-
-            const playlist = playlists.songs;
-            if (index < 1 || index > playlist.length) {
-                return interaction.reply({ content: '指定されたインデックスの曲は存在しません。', ephemeral: true });
-            }
-
-            const removedSong = playlist.splice(index - 1, 1);
-
-            // Supabaseにプレイリストを更新
-            const { error: updateError } = await supabase
-                .from('playlists')
-                .update({ songs: playlist })
-                .eq('name', playlistName)
-                .eq('guild_id', guildId);
-
-            if (updateError) {
-                console.error('Supabaseでの更新中にエラーが発生しました:', updateError.message);
-                return interaction.reply({ content: 'プレイリストから曲の削除中にエラーが発生しました。', ephemeral: true });
-            }
-
-            // 管理者へのレポートを送信する
-            const adminUserId = '1162414065348521984'; // メッセージを受け取る管理者のユーザーID
-            const adminUser = await interaction.client.users.fetch(adminUserId);
-            const reportEmbed = new MessageEmbed()
-                .setColor('#0000FF')
-                .setTitle('音楽削除レポート')
-                .setDescription(`サーバー: ${interaction.guild.name}\nチャンネル: ${interaction.channel.name}\n削除者: ${interaction.user.tag}\nプレイリスト: ${playlistName}\n削除された曲: ${removedSong[0].title}`)
-                .setTimestamp();
-
-            await adminUser.send({ embeds: [reportEmbed] });
-
-            return interaction.reply({ content: `プレイリスト "${playlistName}" から曲 "${removedSong[0].title}" を削除しました。`, ephemeral: true });
-        } catch (error) {
-            console.error('プレイリストから曲の削除中にエラーが発生しました:', error);
-            return interaction.reply({ content: 'プレイリストから曲の削除中にエラーが発生しました。', ephemeral: true });
+        if (error || !playlist || !playlist.songs) {
+            const errorEmbed = new EmbedBuilder()
+                .setColor('#FF0000')
+                .setTitle('エラー')
+                .setDescription('プレイリストの取得中にエラーが発生しました。');
+            return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
         }
+
+        const songs = playlist.songs;
+        if (index < 1 || index > songs.length) {
+            const invalidIndexEmbed = new EmbedBuilder()
+                .setColor('#FF0000')
+                .setTitle('エラー')
+                .setDescription('指定されたインデックスの曲は存在しません。');
+            return interaction.reply({ embeds: [invalidIndexEmbed], ephemeral: true });
+        }
+
+        const removedSong = songs.splice(index - 1, 1);
+
+        // プレイリストを更新
+        const { error: updateError } = await supabase
+            .from('playlists')
+            .update({ songs })
+            .eq('name', playlistName)
+            .eq('guild_id', guildId);
+
+        if (updateError) {
+            const updateErrorEmbed = new EmbedBuilder()
+                .setColor('#FF0000')
+                .setTitle('エラー')
+                .setDescription('プレイリストの更新中にエラーが発生しました。');
+            return interaction.reply({ embeds: [updateErrorEmbed], ephemeral: true });
+        }
+
+        const successEmbed = new EmbedBuilder()
+            .setColor('#00FF00')
+            .setTitle('成功')
+            .setDescription(`${playlistName} の ${index} 番目の曲を削除しました`);
+            console.log(`${playlistName} の ${index} 番目の曲を削除しました`);
+        return interaction.reply({ embeds: [successEmbed], ephemeral: true });
+
+
     },
 };
