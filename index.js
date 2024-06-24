@@ -1,6 +1,7 @@
 const { Client, Events, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
+const express = require('express');
 
 // Supabaseクライアントの設定
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -110,15 +111,14 @@ client.on('error', async (error) => {
     }
 });
 
-// Expressサーバーの追加
-const express = require('express');
+// Expressサーバーの設定
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-    res.send('Discord bot is running!');
+    res.send('Discord bot is running');
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+app.listen(port, () => {
+    console.log(`Expressサーバーがポート${port}で起動しました`);
 });
