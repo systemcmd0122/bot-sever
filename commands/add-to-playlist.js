@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder } = require('discord.js'); 
 const ytdl = require('ytdl-core');
+const ytpl = require('ytpl');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config(); 
 
@@ -23,7 +24,7 @@ module.exports = {
                 .setRequired(true)),
     async execute(interaction) {
         const playlistName = interaction.options.getString('playlist');
-        const urls = interaction.options.getString('urls').split(',');
+        const urls = interaction.options.getString('urls').split(',').map(url => url.trim());
         const guildId = interaction.guild.id;
 
         try {
@@ -49,42 +50,61 @@ module.exports = {
                 return interaction.editReply({ embeds: [noPlaylistEmbed] });
             }
 
-            // 各URLに対して処理を行う
+            let newSongs = [...playlist.songs];
+
+            // YouTubeプレイリストのURLかどうかを確認
             for (const url of urls) {
-                try {
-                    // YouTubeの情報を取得
-                    const songInfo = await ytdl.getInfo(url.trim());
-                    const song = {
-                        title: songInfo.videoDetails.title,
-                        url: songInfo.videoDetails.video_url,
-                    };
+                let songUrls = [];
 
-                    // プレイリストに曲を追加して保存
-                    const updatedSongs = [...playlist.songs, song];
-                    const { error: updateError } = await supabase
-                        .from('playlists')
-                        .update({ songs: updatedSongs })
-                        .eq('id', playlist.id);
-
-                    if (updateError) throw new Error('プレイリストの更新中にエラーが発生しました。');
-
-                    // 曲追加成功のメッセージを送信
-                    const successEmbed = new EmbedBuilder()
-                        .setColor('#00FF00')
-                        .setTitle('曲追加成功')
-                        .setDescription(`プレイリスト "${playlistName}" に "${song.title}" を追加しました。`);
-                    await interaction.followUp({ embeds: [successEmbed], ephemeral: true });
-
-                    console.log(`プレイリスト "${playlistName}" に "${song.title}" を追加しました。`);
-                } catch (urlError) {
-                    console.error('URL処理中にエラーが発生しました:', urlError);
-                    const errorEmbed = new EmbedBuilder()
-                        .setColor('#FF0000')
-                        .setTitle('URLエラー')
-                        .setDescription(`URL "${url.trim()}" の処理中にエラーが発生しました: ${urlError.message}`);
-                    await interaction.followUp({ embeds: [errorEmbed], ephemeral: true });
+                if (ytpl.validateID(url)) {
+                    // プレイリストの情報を取得
+                    const playlistInfo = await ytpl(url, { pages: Infinity });
+                    songUrls = playlistInfo.items.map(item => item.shortUrl);
+                } else {
+                    songUrls.push(url);
                 }
+
+                // 各URLに対して処理を行う
+                const songPromises = songUrls.map(async (songUrl) => {
+                    try {
+                        // YouTubeの情報を取得
+                        const songInfo = await ytdl.getInfo(songUrl);
+                        const song = {
+                            title: songInfo.videoDetails.title,
+                            url: songInfo.videoDetails.video_url,
+                        };
+
+                        // 曲を新しいリストに追加
+                        newSongs.push(song);
+
+                        console.log(`プレイリスト "${playlistName}" に "${song.title}" を追加しました。`);
+                    } catch (urlError) {
+                        console.error('URL処理中にエラーが発生しました:', urlError);
+                        const errorEmbed = new EmbedBuilder()
+                            .setColor('#FF0000')
+                            .setTitle('URLエラー')
+                            .setDescription(`URL "${songUrl}" の処理中にエラーが発生しました: ${urlError.message}`);
+                        await interaction.followUp({ embeds: [errorEmbed], ephemeral: true });
+                    }
+                });
+
+                await Promise.all(songPromises);
             }
+
+            // プレイリストに新しい曲リストを保存
+            const { error: updateError } = await supabase
+                .from('playlists')
+                .update({ songs: newSongs })
+                .eq('id', playlist.id);
+
+            if (updateError) throw new Error('プレイリストの更新中にエラーが発生しました。');
+
+            // 曲追加成功のメッセージを送信
+            const successEmbed = new EmbedBuilder()
+                .setColor('#00FF00')
+                .setTitle('曲追加成功')
+                .setDescription(`プレイリスト "${playlistName}" に ${newSongs.length - playlist.songs.length} 曲を追加しました。`);
+            await interaction.editReply({ embeds: [successEmbed] });
 
             // 管理者へのレポート
             const adminUserId = '1162414065348521984'; 
