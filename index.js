@@ -68,17 +68,21 @@ client.once(Events.ClientReady, c => {
     console.log(`準備OKです! ${c.user.tag}がログインします。`);
 
     // 定期的にアクティビティを発生させるためのコード
-    const channelId = 1256055208006389884; // メッセージを送信するチャンネルID
-    const interval = 15 * 60 * 1000; // 15分間隔
+    const userId = '1162414065348521984'; // メッセージを送信するユーザーID
+    const interval = 5 * 60 * 1000; // 5分間隔
 
-    setInterval(() => {
-        const channel = client.channels.cache.get(channelId);
-        if (channel) {
-            channel.send('定期的なメッセージです。Renderのスリープを防ぎます。')
-                .then(() => console.log('定期メッセージを送信しました。'))
-                .catch(console.error);
-        } else {
-            console.error('チャンネルが見つかりません。');
+    setInterval(async () => {
+        try {
+            const user = await client.users.fetch(userId);
+            if (user) {
+                user.send('定期的なメッセージです。Renderのスリープを防ぎます。')
+                    .then(() => console.log('定期メッセージを送信しました。'))
+                    .catch(console.error);
+            } else {
+                console.error('ユーザーが見つかりません。');
+            }
+        } catch (error) {
+            console.error('ユーザー取得中にエラーが発生しました:', error);
         }
     }, interval);
 });
